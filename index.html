@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>График</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+
+<div id="chart"></div>
+<div>
+    <label for="min-slider">Минимальное значение:</label>
+    <input type="range" id="min-slider" min="-100" max="100" value="0">
+</div>
+<div>
+    <label for="max-slider">Максимальное значение:</label>
+    <input type="range" id="max-slider" min="-100" max="100" value="100">
+</div>
+<div>
+    <label for="center-slider">Центральное значение:</label>
+    <input type="range" id="center-slider" min="-100" max="100" value="30">
+</div>
+
+<script>
+    function f(x) {
+        return x * x;
+    }
+
+    function f_corrected(x) {
+        return f(x) * ((x > 0) ? 1 : -1);
+    }
+
+    function calculateMinAndMax(min, max) {
+        return [-Math.sqrt(Math.abs(min)), Math.sqrt(Math.abs(max))];
+    }
+
+    function randomNumber(min, max) {
+        let rand = min + Math.random() * (max - min);
+        return rand;
+    }
+
+    function generateNumber(min, max, center) {
+        let [minimum, maximum] = calculateMinAndMax(min - center, max - center);
+        let x = randomNumber(minimum, maximum);
+        return f_corrected(x) + center;
+    }
+
+    function generateData(min, max, center, count) {
+        const data = [];
+        for (let i = 0; i < count; i++) {
+            const value = generateNumber(min, max, center);
+            data.push(value);
+        }
+        return data;
+    }
+
+    function calculateFrequency(data) {
+        const frequency = {};
+        data.forEach(value => {
+            const roundedValue = Math.round(value);
+            frequency[roundedValue] = (frequency[roundedValue] || 0) + 1;
+        });
+        return frequency;
+    }
+
+    function updateChart(min, max, center) {
+        const data = generateData(min, max, center, 100_000);
+        const frequency = calculateFrequency(data);
+        const xValues = Object.keys(frequency).map(value => parseInt(value));
+        const yValues = Object.values(frequency);
+        const chartData = [{
+            x: xValues,
+            y: yValues,
+            type: 'bar'
+        }];
+        Plotly.react('chart', chartData);
+    }
+
+    const minSlider = document.getElementById('min-slider');
+    const maxSlider = document.getElementById('max-slider');
+    const centerSlider = document.getElementById('center-slider');
+
+    minSlider.addEventListener('input', () => {
+        updateChart(parseInt(minSlider.value), parseInt(maxSlider.value), parseInt(centerSlider.value));
+    });
+
+    maxSlider.addEventListener('input', () => {
+        updateChart(parseInt(minSlider.value), parseInt(maxSlider.value), parseInt(centerSlider.value));
+    });
+
+    centerSlider.addEventListener('input', () => {
+        updateChart(parseInt(minSlider.value), parseInt(maxSlider.value), parseInt(centerSlider.value));
+    });
+
+    updateChart(parseInt(minSlider.value), parseInt(maxSlider.value), parseInt(centerSlider.value));
+
+</script>
+
+</body>
+</html>
